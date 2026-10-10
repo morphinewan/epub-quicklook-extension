@@ -106,7 +106,11 @@ final class EPUBParser: NSObject {
             let data = try Data(contentsOf: url)
             let src = String(data: data, encoding: .utf8) ?? (String(data: data, encoding: .isoLatin1) ?? "")
             let extracted = Self.extractBody(html: src)
-            body += "\n<section class=\"chapter\" id=\"ch\(i)\">\n" + Self.rewriteResourceURLs(in: extracted, base: base) + "\n</section>\n"
+            // Resolve relative resource URLs against the chapter's own file location,
+            // not the OPF folder: chapters may live in subdirectories (e.g. text/),
+            // so `src="../image/cover.jpg"` must resolve from that subdirectory.
+            let chapterBase = url.deletingLastPathComponent()
+            body += "\n<section class=\"chapter\" id=\"ch\(i)\">\n" + Self.rewriteResourceURLs(in: extracted, base: chapterBase) + "\n</section>\n"
         }
 
         let css = Self.defaultCSS
